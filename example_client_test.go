@@ -13,7 +13,7 @@ import (
 	"os"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
+	amqp "github.com/winlin/amqp091-go"
 )
 
 // This exports a Client object that wraps this library. It

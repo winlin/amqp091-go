@@ -1,7 +1,6 @@
 // This example declares a durable Exchange, an ephemeral (auto-delete) Queue,
 // binds the Queue to the Exchange with a binding key, and consumes every
 // message published to that Exchange with that routing key.
-//
 package main
 
 import (
@@ -13,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
+	amqp "github.com/winlin/amqp091-go"
 )
 
 var (

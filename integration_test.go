@@ -1386,7 +1386,6 @@ func TestRoundTripAllFieldValueTypes61(t *testing.T) {
 // serialization.
 //
 // Relates to https://github.com/streadway/amqp/issues/60
-//
 func TestDeclareArgsXMessageTTL(t *testing.T) {
 	if conn := integrationConnection(t, "declareTTL"); conn != nil {
 		defer conn.Close()
@@ -1405,7 +1404,6 @@ func TestDeclareArgsXMessageTTL(t *testing.T) {
 // to a fanout exchange, with a single queue bound.
 //
 // Relates to https://github.com/streadway/amqp/issues/56
-//
 func TestDeclareArgsRejectToDeadLetterQueue(t *testing.T) {
 	if conn := integrationConnection(t, "declareArgs"); conn != nil {
 		defer conn.Close()
@@ -1986,7 +1984,7 @@ func TestIntegrationGetNextPublishSeqNo(t *testing.T) {
 	}
 }
 
-// https://github.com/rabbitmq/amqp091-go/pull/44
+// https://github.com/winlin/amqp091-go/pull/44
 func TestShouldNotWaitAfterConnectionClosedIssue44(t *testing.T) {
 	conn := integrationConnection(t, "TestShouldNotWaitAfterConnectionClosedIssue44")
 	ch, err := conn.Channel()
@@ -2083,7 +2081,7 @@ func assertConsumeBody(t *testing.T, messages <-chan Delivery, want []byte) (msg
 	return msg
 }
 
-// https://github.com/rabbitmq/amqp091-go/issues/11
+// https://github.com/winlin/amqp091-go/issues/11
 func TestShouldNotWaitAfterConnectionClosedNewChannelCreatedIssue11(t *testing.T) {
 	conn := integrationConnection(t, "TestShouldNotWaitAfterConnectionClosedNewChannelCreatedIssue11")
 	ch, err := conn.Channel()
