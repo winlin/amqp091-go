@@ -115,10 +115,7 @@ func (ch *Channel) shutdown(e *Error) {
 			for _, c := range ch.closes {
 				c <- e
 			}
-		}
-
-		// Notify RPC if we're selecting
-		if e != nil {
+			// Notify RPC if we're selecting
 			ch.errors <- e
 		}
 
@@ -243,14 +240,33 @@ func (ch *Channel) sendOpen(msg message) (err error) {
 			return ch.sendClosed(msg)
 		}
 
-		if err = ch.connection.send(&methodFrame{
+		// Flush the buffer only after all the Frames that comprise the Message
+		// have been written to maximise benefits of using a buffered writer.
+		defer func() {
+			if endError := ch.connection.endSendUnflushed(); endError != nil {
+				if err == nil {
+					err = endError
+				}
+			}
+		}()
+
+		// We use sendUnflushed() in this method as sending the message requires
+		// sending multiple Frames (methodFrame, headerFrame, N x bodyFrame).
+		// Flushing after each Frame is inefficient, as it negates much of the
+		// benefit of using a buffered writer and results in more syscalls than
+		// necessary. Flushing buffers after every frame can have a significant
+		// performance impact when sending (e.g. basicPublish) small messages,
+		// so sendUnflushed() performs an *Unflushed* write, but is otherwise
+		// equivalent to the send() method. We later use the separate flush
+		// method to explicitly flush the buffer after all Frames are written.
+		if err = ch.connection.sendUnflushed(&methodFrame{
 			ChannelId: ch.id,
 			Method:    content,
 		}); err != nil {
 			return
 		}
 
-		if err = ch.connection.send(&headerFrame{
+		if err = ch.connection.sendUnflushed(&headerFrame{
 			ChannelId:  ch.id,
 			ClassId:    class,
 			Size:       uint64(len(body)),
@@ -265,7 +281,7 @@ func (ch *Channel) sendOpen(msg message) (err error) {
 				j = len(body)
 			}
 
-			if err = ch.connection.send(&bodyFrame{
+			if err = ch.connection.sendUnflushed(&bodyFrame{
 				ChannelId: ch.id,
 				Body:      body[i:j],
 			}); err != nil {
@@ -642,7 +658,6 @@ func (ch *Channel) NotifyPublish(confirm chan Confirmation) chan Confirmation {
 	}
 
 	return confirm
-
 }
 
 /*
@@ -864,6 +879,8 @@ declared with specific parameters.
 
 If a queue by this name does not exist, an error will be returned and the
 channel will be closed.
+
+Deprecated: Use QueueDeclare with "Passive: true" instead.
 */
 func (ch *Channel) QueueInspect(name string) (Queue, error) {
 	req := &queueDeclare{
@@ -1447,7 +1464,7 @@ func (ch *Channel) PublishWithDeferredConfirmWithContext(ctx context.Context, ex
 	}
 
 	if ch.confirming {
-		return ch.confirms.Publish(ctx), nil
+		return ch.confirms.Publish(), nil
 	}
 
 	return nil, nil
